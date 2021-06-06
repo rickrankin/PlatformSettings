@@ -1,13 +1,18 @@
+import socket
+
 import sublime
 import sublime_plugin
+
 
 class PlatformSettingsEventListener(sublime_plugin.EventListener):
     def check_settings(self, view, first=False):
         s = view.settings()
-        default_keys = ["${platform}", "user_${platform}"]
+        default_keys = ["${platform}", "user_${platform}", "${hostname}", "${platform}_${hostname}"]
         keys = s.get("platform_settings_keys", default_keys)
         if not keys:
             keys = default_keys
+
+        hostname = socket.gethostname().split('.')[0].casefold()
 
         if not first:
             first = not s.get("platform_settings_was_here", False)
@@ -17,6 +22,7 @@ class PlatformSettingsEventListener(sublime_plugin.EventListener):
         platform_settings = {}
         for key in keys:
             key = key.replace("${platform}", sublime.platform())
+            key = key.replace("${hostname}", hostname)
             platform_settings.update(s.get(key, {}) or {})
 
         for key in platform_settings:
